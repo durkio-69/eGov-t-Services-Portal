@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  
+  /* Geometric Balance Palette */
+  --color-primary-blue: #1a365d;
+  --color-secondary-blue: #2c5282;
+  --color-accent-blue: #3182ce;
+  --color-app-bg: #f8fafc;
+  --color-card-bg: #ffffff;
+  --color-border-slate: #e2e8f0;
+  --color-text-main: #2d3748;
+  --color-text-muted: #718096;
+  --color-gov-gold: #b7791f;
+  --color-gov-blue: #1a365d;
+  --color-gov-maroon: #8b0000;
+  --color-gov-maroon-dark: #660000;
+
+  /* Dark Mode Overrides */
+  --color-dark-bg: #0f172a;
+  --color-dark-card: #1e293b;
+  --color-dark-border: #334155;
+  --color-dark-text-main: #f1f5f9;
+  --color-dark-text-muted: #94a3b8;
+}
+
+@layer base {
+  .dark {
+    --color-app-bg: var(--color-dark-bg);
+    --color-card-bg: var(--color-dark-card);
+    --color-border-slate: var(--color-dark-border);
+    --color-text-main: var(--color-dark-text-main);
+    --color-text-muted: var(--color-dark-text-muted);
+  }
+}
+
+@layer utilities {
+  .bg-grid-slate-100 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(15 23 42 / 0.04)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E");
+  }
+  
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+}
+
+body {
+  @apply font-sans bg-app-bg text-text-main antialiased;
+}
+
+.geometric-card {
+  @apply bg-card-bg border border-border-slate rounded-xl shadow-sm transition-all duration-200 hover:border-accent-blue;
+}
+
+.glass-card {
+  @apply bg-card-bg/80 backdrop-blur-md border border-border-slate/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all duration-300;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+}
+
+.search-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.tag-neutral {
+  @apply text-[11px] px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 font-bold uppercase;
+}
+
+.tag-success {
+  @apply text-[11px] px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-bold uppercase;
+}
+
+.tag-error {
+  @apply text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-bold uppercase;
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0);
+  background-size: 24px 24px;
+}

@@ -1,0 +1,105 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function isResourceOwner() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Helpers ---
+    function isValidUserProfile(data) {
+      return data.userId == request.auth.uid 
+             && data.email is string 
+             && data.email.size() <= 200
+             && data.createdAt == request.time
+             && data.keys().hasAll(['userId', 'email', 'createdAt'])
+             && data.keys().size() >= 3;
+    }
+
+    function isValidApplication(data) {
+      return data.userId == request.auth.uid
+             && data.serviceName is string
+             && data.serviceName.size() <= 200
+             && data.agency is string
+             && data.agency.size() <= 100
+             && data.status in ['Draft', 'Pending', 'Processing', 'Approved', 'Rejected']
+             && data.currentStep is int
+             && data.totalSteps is int
+             && data.createdAt == request.time
+             && data.keys().hasAll(['userId', 'serviceName', 'agency', 'status', 'createdAt'])
+             && data.keys().size() >= 5;
+    }
+
+    function isValidDocument(data) {
+      return data.userId == request.auth.uid
+             && data.name is string
+             && data.name.size() <= 200
+             && data.status in ['Verified', 'Pending Review', 'Expired']
+             && data.createdAt == request.time
+             && data.keys().hasAll(['userId', 'name', 'status', 'createdAt'])
+             && data.keys().size() >= 4;
+    }
+
+    // --- Collections ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidId(userId)
+                    && incoming().userId == existing().userId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'citizenId', 'preferences', 'updatedAt'])
+                    && (incoming().updatedAt == request.time);
+    }
+
+    match /applications/{applicationId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isResourceOwner() && isValidId(applicationId);
+      allow create: if isSignedIn() && isValidId(applicationId)
+                    && isValidApplication(incoming())
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isResourceOwner() && isValidId(applicationId)
+                    && (existing().status != 'Approved') // Terminal state locking
+                    && incoming().userId == existing().userId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'currentStep', 'totalSteps', 'updatedAt'])
+                    && (incoming().updatedAt == request.time);
+      allow delete: if isResourceOwner() && (existing().status == 'Draft');
+    }
+
+    match /documents/{documentId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isResourceOwner() && isValidId(documentId);
+      allow create: if isSignedIn() && isValidId(documentId)
+                    && isValidDocument(incoming())
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isResourceOwner() && isValidId(documentId)
+                    && incoming().userId == existing().userId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'status', 'updatedAt'])
+                    && (incoming().updatedAt == request.time);
+      allow delete: if isResourceOwner() && isValidId(documentId);
+    }
+  }
+}

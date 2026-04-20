@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public and private information for a citizen user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "citizenId": { "type": "string" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "appStatus": { "type": "boolean" },
+            "newDocs": { "type": "boolean" },
+            "paymentReminders": { "type": "boolean" },
+            "securityAlerts": { "type": "boolean" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "createdAt"]
+    },
+    "Application": {
+      "title": "Service Application",
+      "description": "A record of a citizen's application for a specific government service",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "agency": { "type": "string" },
+        "status": { "type": "string", "enum": ["Draft", "Pending", "Processing", "Approved", "Rejected"] },
+        "currentStep": { "type": "integer" },
+        "totalSteps": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "serviceName", "status", "createdAt"]
+    },
+    "Document": {
+      "title": "Digital Vault Document",
+      "description": "A verified document stored in the citizen's digital vault",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string", "enum": ["Verified", "Pending Review", "Expired"] },
+        "size": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Storage for user profiles, partitioned by UID"
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Collection of all service applications cross-indexed by userId"
+    },
+    "/documents/{documentId}": {
+      "schema": "Document",
+      "description": "Collection of digital documents cross-indexed by userId"
+    }
+  }
+}
